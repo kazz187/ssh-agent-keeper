@@ -20,7 +20,7 @@ import (
 // of them prompts. The first prompt answered wins: its shell announces that
 // through the state file, and the other shells, watching the file, find the
 // agent holding identities, abandon their own prompts and carry on.
-func unlock(path string, agent Agent, sshAddArgs []string) (Agent, error) {
+func unlock(path string, agent Agent, keys []string) (Agent, error) {
 	// Without a watch, still prompt; only the other windows go unnoticed.
 	var events <-chan fswatcher.Event
 	var errs <-chan error
@@ -49,7 +49,7 @@ func unlock(path string, agent Agent, sshAddArgs []string) (Agent, error) {
 	}
 
 	info("enter the passphrase here or in any other window")
-	cmd := exec.Command("ssh-add", sshAddArgs...)
+	cmd := exec.Command("ssh-add", keys...)
 	cmd.Env = append(os.Environ(), agent.environ()...)
 	// Stdout is for the shell to eval, so ssh-add's messages go to stderr.
 	cmd.Stdin, cmd.Stdout, cmd.Stderr = os.Stdin, os.Stderr, os.Stderr

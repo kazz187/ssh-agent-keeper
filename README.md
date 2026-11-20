@@ -17,23 +17,28 @@ go install github.com/kazz187/ssh-agent-keeper@latest
 
 ## 設定
 
-`~/.zshrc` などに、エージェントの情報を記録する pid ファイルを指定して 1 行書くだけです。
+`~/.zshrc` などに 1 行書くだけです。
 
 ```zsh
-eval "$(ssh-agent-keeper ~/.ssh-agent)"
+eval "$(ssh-agent-keeper)"
 ```
 
 子プロセスは親シェルの環境変数を変えられないため、`SSH_AUTH_SOCK` と `SSH_AGENT_PID` は `eval` で設定します。
 
-`ssh-add` に引数を渡したい場合は pid ファイルの後ろに書きます。
+### オプション
+
+| オプション | 説明 |
+|---|---|
+| `-f`, `--pid-file=FILE` | エージェントの情報を記録する pid ファイル。既定値は `~/.config/ssh-agent-keeper/ssh-agent-pid` で、ディレクトリがなければ作成します。 |
+| `-k`, `--key=FILE` | `ssh-add` で登録する鍵ファイル。繰り返して複数指定できます。省略すると `ssh-add` の既定の鍵を登録します。 |
 
 ```zsh
-eval "$(ssh-agent-keeper ~/.ssh-agent ~/.ssh/id_ed25519)"
+eval "$(ssh-agent-keeper -k ~/.ssh/id_ed25519 -k ~/.ssh/id_rsa)"
 ```
 
 ## 動作
 
-pid ファイルは `ssh-agent -s` の出力と同じ形式なので、従来どおり `. ~/.ssh-agent` で読み込むこともできます。
+pid ファイルは `ssh-agent -s` の出力と同じ形式なので、シェルから `.` で読み込むこともできます。
 
 1. pid ファイルを `flock` で排他ロックし、記録されているエージェントが生きているか確認します。PID が存在するだけでなくソケットが応答することまで確かめるので、再起動後に PID が別のプロセスに再利用されていても誤認しません。生きていなければ `ssh-agent` を起動して pid ファイルに記録します。ロックがあるので、同時に起動したシェルが別々にエージェントを起動することはありません。
 2. エージェントが鍵を 1 つも持っておらず、標準入力が端末であれば `ssh-add` を実行してパスフレーズを尋ねます。同時に pid ファイルを [fswatcher](https://github.com/fswatcher/fswatcher) で監視します。

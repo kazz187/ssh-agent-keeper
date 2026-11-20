@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"syscall"
 )
 
@@ -46,8 +47,12 @@ func writeAgent(f *os.File, a Agent) error {
 }
 
 // ensureAgent returns the agent recorded in the state file, starting and
-// recording a new one when there is none or it is no longer running.
+// recording a new one when there is none or it is no longer running. The
+// file's directory is created if missing.
 func ensureAgent(path string) (Agent, error) {
+	if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
+		return Agent{}, err
+	}
 	var agent Agent
 	err := withState(path, syscall.LOCK_EX, func(f *os.File) error {
 		if a, err := readAgent(f); err == nil && a.alive() {

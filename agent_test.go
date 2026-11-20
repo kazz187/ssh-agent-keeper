@@ -66,7 +66,8 @@ func ensureAgentT(t *testing.T, path string) Agent {
 }
 
 func TestEnsureAgent(t *testing.T) {
-	path := filepath.Join(t.TempDir(), "ssh-agent")
+	// The directory does not exist yet: ensureAgent creates it.
+	path := filepath.Join(t.TempDir(), "config", "ssh-agent-pid")
 	requireAgent(t)
 
 	first := ensureAgentT(t, path)
